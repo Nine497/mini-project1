@@ -1,0 +1,4 @@
+ID,FName,Lname,Role,Age,username,password,tel
+111,Admin,asdasd,admin,30,admin,admin,0811111111
+112,Employee,aaaaa,employee,25,emp,emp,0922222222
+113,Customer,cccccc,customer,35,cus,cus,0633333333

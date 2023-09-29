@@ -1,0 +1,6 @@
+roomID,roomType,status,price
+101,Standard,Occupied,1000
+102,Deluxe,Vacant Dirty,1500
+103,Standard,Occupied,1000
+104,Deluxe,Vacant,1500
+105,Suite,Vacant,2000
