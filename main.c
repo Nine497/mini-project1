@@ -93,7 +93,7 @@ void displayLogin(struct Node *head, char loggedInUser[])
 
     while (loginAttempts < 3)
     {
-        system("clear");
+        system("cls");
         printf("=====================================\n");
         printf("|             Login                |\n");
         printf("=====================================\n\n");
@@ -133,7 +133,7 @@ void displayLogin(struct Node *head, char loggedInUser[])
 int displayMenu()
 {
     int choice;
-    system("clear");
+    system("cls");
     printf("=====================================\n");
     printf("|           Login System           |\n");
     printf("=====================================\n\n");
@@ -153,7 +153,7 @@ int displayMenu()
 int displayCusMenu()
 {
     int cuschoice;
-    system("clear");
+    system("cls");
     printf("=====================================\n");
     printf("|           Customer Menu           |\n");
     printf("=====================================\n\n");
@@ -177,7 +177,7 @@ void displayMembers(struct Node *head)
         printf("The list is empty.\n");
         return;
     }
-    system("clear");
+    system("cls");
     printf("=====================================\n");
     printf("|          Member List             |\n");
     printf("=====================================\n\n");
@@ -281,7 +281,7 @@ void displayRoom(struct RoomNode *head)
         printf("The list is empty.\n");
         return;
     }
-    system("clear");
+    system("cls");
     printf("=====================================\n");
     printf("|          Room List               |\n");
     printf("=====================================\n\n");
@@ -323,7 +323,7 @@ int displayReservationMenu()
     int cusRMchoice;
     while (1)
     {
-        system("clear");
+        system("cls");
         printf("=====================================\n");
         printf("|        Make a Reservation         |\n");
         printf("=====================================\n\n");
@@ -445,7 +445,7 @@ int RoomAvailable(struct RoomNode *roomsHead)
 {
     char RoomID;
     struct RoomNode *currentRoom = roomsHead;
-    system("clear");
+    system("cls");
     printf("=====================================\n");
     printf("|        Room Available               |\n");
     printf("=====================================\n\n");
@@ -496,7 +496,7 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID)
         {
             if (strcmp(currentRoom->data.status, "Occupied") == 1)
             {
-                system("clear");
+                system("cls");
                 printf("%d", userID);
                 printf("=====================================\n");
                 printf("|        Booking                    |\n");
@@ -620,7 +620,7 @@ void ChangeStatusRoom(int roomid, struct RoomNode *roomHead)
         currentRoom = roomHead;
         while (currentRoom != NULL)
         {
-            fprintf(file, "%s,%s,%s,%s\n", currentRoom->data.roomID, currentRoom->data.roomType, currentRoom->data.status, currentRoom->data.price);
+            fprintf(file, "%s,%s,%s,%s", currentRoom->data.roomID, currentRoom->data.roomType, currentRoom->data.status, currentRoom->data.price);
             currentRoom = currentRoom->next;
         }
 
