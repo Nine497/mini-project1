@@ -89,9 +89,8 @@ void memberDataRead(struct Node **head)
 
 void displayLogin(struct Node *head, char loggedInUser[])
 {
-    int loginAttempts = 0;
 
-    while (loginAttempts < 3)
+    while (1)
     {
         system("cls");
         printf("=====================================\n");
@@ -121,31 +120,57 @@ void displayLogin(struct Node *head, char loggedInUser[])
             current = current->next;
         }
 
-        printf("\nLogin failed. Username or password is incorrect. %d attempts remaining.\n", 2 - loginAttempts);
-        sleep(3);
+        printf("\nLogin failed. Username or password is incorrect.\n");
+        printf("\nPress any key to login again or press 'Q' to back to main menu.");
+        int key = getch();
+        if (key == 'Q' || key == 'q')
+        {
+            return;
+        }
+        getch();
         loggedInUser[0] = '\0';
-        loginAttempts++;
     }
-
-    printf("\nMaximum login attempts reached.\n");
 }
 
 int displayMenu()
 {
     int choice;
-    system("cls");
-    printf("=====================================\n");
-    printf("|           Login System           |\n");
-    printf("=====================================\n\n");
 
-    printf("1. Login\n");
-    printf("2. Register\n");
-    printf("3. Exit\n");
-    printf("4. Show member\n");
-    printf("5. Show member\n");
+    while (1)
+    {
+        system("cls");
+        printf("=====================================\n");
+        printf("|           Login System           |\n");
+        printf("=====================================\n\n");
 
-    printf("Enter your choice: ");
-    scanf("%d", &choice);
+        printf("1. Login\n");
+        printf("2. Register\n");
+        printf("3. Exit\n");
+        printf("4. Show members\n");
+        printf("5. Show Room\n");
+        printf("6. Show Reservation\n");
+
+        printf("Enter your choice: ");
+
+        if (scanf("%d", &choice) != 1)
+        {
+            while (getchar() != '\n')
+                ;
+            printf("Invalid input. Please enter a valid choice.\n");
+            system("pause");
+            continue;
+        }
+
+        if (choice < 1 || choice > 6)
+        {
+            printf("Invalid choice. Please enter a valid option between 1-5.\n");
+            system("pause");
+        }
+        else
+        {
+            break;
+        }
+    }
 
     return choice;
 }
@@ -153,19 +178,39 @@ int displayMenu()
 int displayCusMenu()
 {
     int cuschoice;
-    system("cls");
-    printf("=====================================\n");
-    printf("|           Customer Menu           |\n");
-    printf("=====================================\n\n");
 
-    printf("1. Reservation\n");
-    printf("2. Change Username\n");
-    printf("3. Change Password\n");
-    printf("4. Change Name\n");
-    printf("5. Log out\n");
+    while (1)
+    {
+        system("cls");
+        printf("=====================================\n");
+        printf("|           Customer Menu           |\n");
+        printf("=====================================\n\n");
 
-    printf("Enter your choice: ");
-    scanf("%d", &cuschoice);
+        printf("1. Reservation\n");
+        printf("2. Edit account\n");
+        printf("3. Log out\n");
+
+        printf("Enter your choice: ");
+
+        if (scanf("%d", &cuschoice) != 1)
+        {
+            while (getchar() != '\n')
+                ;
+            printf("Invalid input. Please enter a valid choice.\n");
+            system("pause");
+            continue;
+        }
+
+        if (cuschoice < 1 || cuschoice > 3)
+        {
+            printf("Invalid choice. Please enter a valid option between 1-3.\n");
+            system("pause");
+        }
+        else
+        {
+            break;
+        }
+    }
 
     return cuschoice;
 }
@@ -195,12 +240,13 @@ void displayMembers(struct Node *head)
         printf("Age: %s\n", current->data.age);
         printf("Username: %s\n", current->data.username);
         printf("Password: %s\n", current->data.password);
-        printf("Tel : %s\n", current->data.tel);
-        printf("\n");
+        printf("Tel : %s", current->data.tel);
+        printf("-------------------------------\n\n");
 
         current = current->next;
         memberCount++;
     }
+    system("pause");
 }
 
 struct Room
@@ -294,13 +340,13 @@ void displayRoom(struct RoomNode *head)
         printf("Room %d:\n", roomCount);
         printf("Room ID: %s\n", current->data.roomID);
         printf("Room Type: %s\n", current->data.roomType);
-        printf("Price: %s\n", current->data.price);
+        printf("Price per night: %s", current->data.price);
         printf("Status: %s\n", current->data.status);
-        printf("\n");
-
+        printf("-------------------------------\n");
         current = current->next;
         roomCount++;
     }
+    system("pause");
 }
 
 struct Reservation
@@ -396,6 +442,38 @@ void reservationDataRead(struct ReservationNode **ReservationHead)
     fclose(file);
 }
 
+void displayReservation(struct ReservationNode *ReservationHead)
+{
+    system("cls"); // Clear the screen
+
+    printf("=====================================\n");
+    printf("|         Reservation Details       |\n");
+    printf("=====================================\n\n");
+
+    if (ReservationHead == NULL)
+    {
+        printf("No reservations found.\n");
+        return;
+    }
+
+    struct ReservationNode *current = ReservationHead;
+
+    while (current != NULL)
+    {
+        printf("Booking ID: %s\n", current->data.bookingID);
+        printf("Member ID: %s\n", current->data.memberID);
+        printf("Room ID: %s\n", current->data.roomID);
+        printf("Check-in Date: %s\n", current->data.checkinDate);
+        printf("Check-out Date: %s\n", current->data.checkoutDate);
+        printf("-------------------------------\n\n");
+
+        current = current->next;
+    }
+
+    printf("Press any key to continue...");
+    getch(); // Wait for user input to continue
+}
+
 int isDateBefore(int day1, int month1, int year1)
 {
     time_t t = time(NULL);
@@ -441,14 +519,33 @@ long generateBookingID(int userID)
     return bookingID;
 }
 
+int isRoomAvailable(struct RoomNode *roomsHead, const char *roomID)
+{
+    struct RoomNode *currentRoom = roomsHead;
+
+    while (currentRoom != NULL)
+    {
+        if (strcmp(currentRoom->data.roomID, roomID) == 0 && strcmp(currentRoom->data.status, "Occupied") == 0)
+        {
+            return 0;
+        }
+        currentRoom = currentRoom->next;
+    }
+
+    return 1;
+}
+
 int RoomAvailable(struct RoomNode *roomsHead)
 {
-    char RoomID;
-    struct RoomNode *currentRoom = roomsHead;
+    char RoomID[10];
     system("cls");
     printf("=====================================\n");
     printf("|        Room Available               |\n");
     printf("=====================================\n\n");
+
+    struct RoomNode *currentRoom = roomsHead;
+    int roomCount = 0;
+
     while (currentRoom != NULL)
     {
         if (strcmp(currentRoom->data.status, "Occupied") == 1)
@@ -456,18 +553,51 @@ int RoomAvailable(struct RoomNode *roomsHead)
             printf("Room %s ---------------------- \n", currentRoom->data.roomID);
             printf("Type : %s \n", currentRoom->data.roomType);
             printf("Status : %s \n\n", currentRoom->data.status);
+            roomCount++;
         }
         currentRoom = currentRoom->next;
     }
 
-    printf("Choose a room :");
-    scanf("%d", &RoomID);
-    return RoomID;
+    if (roomCount == 0)
+    {
+        printf("No rooms are currently available.\n");
+        printf("Press 0 to go back to the main menu: ");
+        scanf("%s", RoomID);
+
+        if (strcmp(RoomID, "0") == 0)
+        {
+            return 0;
+        }
+
+        printf("Invalid choice. Please try again.\n");
+        return -1;
+    }
+
+    while (1)
+    {
+        printf("Choose a room (or 0 to go back to the main menu): ");
+        scanf("%s", RoomID);
+
+        if (strcmp(RoomID, "0") == 0)
+        {
+            return 0;
+        }
+
+        if (isRoomAvailable(roomsHead, RoomID))
+        {
+            return atoi(RoomID);
+        }
+        else
+        {
+            printf("Room with ID %s is already booked.\n", RoomID);
+        }
+    }
 }
 
 int calculateNights(int checkinday, int checkinmonth, int checkinyear, int checkoutday, int checkoutmonth, int checkoutyear)
 {
     int nights = (checkoutyear - checkinyear) * 360 + (checkoutmonth - checkinmonth) * 30 + (checkoutday - checkinday);
+
     return nights;
 }
 
@@ -485,11 +615,38 @@ void SaveReservation(int userID, int roomID, char *checkinDate, char *checkoutDa
     fclose(file);
 }
 
+void payment()
+{
+    printf("|-----------------------------------|\n");
+    printf("|                                   |\n");
+    printf("|                                   |\n");
+    printf("|              QR CODE              |\n");
+    printf("|                                   |\n");
+    printf("|                                   |\n");
+    printf("|-----------------------------------|\n");
+    return;
+}
+
+void printLoadingAnimation(int seconds)
+{
+    char animation[] = "|/-\\";
+    int i;
+    for (i = 0; i < seconds * 2; i++)
+    {
+        printf("Waiting for payment verification... %c\r", animation[i % 4]);
+        fflush(stdout);
+        usleep(500000);
+    }
+    printf("Payment verification complete!\n");
+}
+
 int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID)
 {
     int Checkinday, Checkinmonth, Checkinyear, Checkoutday, Checkoutmonth, Checkoutyear;
     char UserRoom[50];
     struct RoomNode *currentRoom = roomsHead;
+    int returnToMainMenu = 0;
+
     while (currentRoom != NULL)
     {
         if (atoi(currentRoom->data.roomID) == UserRoomId)
@@ -497,76 +654,117 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID)
             if (strcmp(currentRoom->data.status, "Occupied") == 1)
             {
                 system("cls");
-                printf("%d", userID);
                 printf("=====================================\n");
                 printf("|        Booking                    |\n");
                 printf("=====================================\n\n");
                 printf("Room %s ---------------------- \n", currentRoom->data.roomID);
                 printf("Type : %s \n", currentRoom->data.roomType);
-                printf("Status : %s \n\n", currentRoom->data.status);
-                printf("Price per night : %s", currentRoom->data.price);
-                printf("Enter a Check in date (dd/mm/yyyy): ");
-                scanf("%d/%d/%d", &Checkinday, &Checkinmonth, &Checkinyear);
-                if (Checkinday <= 0 || Checkinday > 30 || Checkinmonth <= 0 || Checkinmonth > 12 || Checkinyear < 2021)
-                {
-                    printf("Invalid check-in date.\n");
-                    getch();
-                    break;
-                }
-                else if (!isDateBefore(Checkinday, Checkinmonth, Checkinyear))
-                {
-                    printf("Invalid check-in date. Check-out date must be after today's date.\n");
-                    getch();
-                    break;
-                }
-                printf("Enter a Check out date (dd/mm/yyyy): ");
-                scanf("%d/%d/%d", &Checkoutday, &Checkoutmonth, &Checkoutyear);
-                if (Checkoutday <= 0 || Checkoutday > 30 || Checkoutmonth <= 0 || Checkoutmonth > 12 || Checkoutyear < 2021)
-                {
-                    printf("Invalid check-out date.\n");
-                    getch();
-                    break;
-                }
-                else if (!isDateBefore(Checkoutday, Checkoutmonth, Checkoutyear))
-                {
-                    printf("Invalid check-out date. Check-out date must be after today's date.\n");
-                    getch();
-                    break;
-                }
-                else
-                {
-                    int nights = calculateNights(Checkinday, Checkinmonth, Checkinyear, Checkoutday, Checkoutmonth, Checkoutyear);
+                printf("Status : %s \n", currentRoom->data.status);
+                printf("Price per night : %s\n\n", currentRoom->data.price);
+                printf("Input '99' to return to the main menu...\n\n");
 
-                    if (nights <= 0)
+                while (1)
+                {
+                    printf("Enter a Check in date (dd/mm/yyyy): ");
+                    scanf("%d/%d/%d", &Checkinday, &Checkinmonth, &Checkinyear);
+
+                    if (Checkinday == 99)
                     {
-                        printf("Invalid dates. Check-out date must be after check-in date.\n");
+                        returnToMainMenu = 1;
+                        break;
+                    }
+
+                    if (Checkinday <= 0 || Checkinday > 30 || Checkinmonth <= 0 || Checkinmonth > 12 || Checkinyear < 2021)
+                    {
+                        printf("Invalid check-in date.\n");
+                        getch();
+                    }
+                    else if (!isDateBefore(Checkinday, Checkinmonth, Checkinyear))
+                    {
+                        printf("Invalid check-in date. Check-out date must be after today's date.\n");
                         getch();
                     }
                     else
                     {
-                        int roomPrice = atoi(currentRoom->data.price);
-                        int total = nights * roomPrice;
-                        printf("Total price for %d nights: %d\n", nights, total);
-
-                        char bookingID[50];
-                        sprintf(bookingID, "%d", generateBookingID(userID));
-
-                        int roomidReser = atoi(currentRoom->data.roomID);
-
-                        char checkindate[50];
-                        sprintf(checkindate, "%d/%d/%d", Checkinday, Checkinmonth, Checkinyear);
-
-                        char checkoutdate[50];
-                        sprintf(checkoutdate, "%d/%d/%d", Checkoutday, Checkoutmonth, Checkoutyear);
-
-                        SaveReservation(userID, roomidReser, checkindate, checkoutdate, bookingID);
-
-                        printf("Press any key to continue...");
-                        getch();
-                        return roomidReser;
+                        break;
                     }
+                }
+
+                if (returnToMainMenu)
+                {
                     break;
                 }
+
+                while (1)
+                {
+                    printf("Enter a Check out date (dd/mm/yyyy): ");
+                    scanf("%d/%d/%d", &Checkoutday, &Checkoutmonth, &Checkoutyear);
+
+                    if (Checkoutday == 99)
+                    {
+                        returnToMainMenu = 1;
+                        break;
+                    }
+
+                    if (Checkoutday <= 0 || Checkoutday > 30 || Checkoutmonth <= 0 || Checkoutmonth > 12 || Checkoutyear < 2021)
+                    {
+                        printf("Invalid check-out date.\n");
+                        getch();
+                    }
+                    else if (!isDateBefore(Checkoutday, Checkoutmonth, Checkoutyear))
+                    {
+                        printf("Invalid check-out date. Check-out date must be after today's date.\n");
+                        getch();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (returnToMainMenu)
+                {
+                    break;
+                }
+
+                int nights = calculateNights(Checkinday, Checkinmonth, Checkinyear, Checkoutday, Checkoutmonth, Checkoutyear);
+
+                if (nights <= 0)
+                {
+                    printf("Invalid dates. Check-out date must be after check-in date.\n");
+                    getch();
+                }
+                else
+                {
+                    int roomPrice = atoi(currentRoom->data.price);
+                    int total = nights * roomPrice;
+                    printf("---------------------------------------------\n");
+                    printf("Total price for %d nights: %d\n", nights, total);
+
+                    char bookingID[50];
+                    sprintf(bookingID, "%d", generateBookingID(userID));
+
+                    int roomidReser = atoi(currentRoom->data.roomID);
+
+                    char checkindate[50];
+                    sprintf(checkindate, "%d/%d/%d", Checkinday, Checkinmonth, Checkinyear);
+
+                    char checkoutdate[50];
+                    sprintf(checkoutdate, "%d/%d/%d", Checkoutday, Checkoutmonth, Checkoutyear);
+
+                    SaveReservation(userID, roomidReser, checkindate, checkoutdate, bookingID);
+
+                    printf("Press any key to make a payment...\n");
+                    getch();
+                    payment();
+                    printf("Press any key when you paid...\n");
+                    getch();
+                    printf("---------------------------------------------");
+                    printLoadingAnimation(5);
+
+                    return roomidReser;
+                }
+                break;
             }
             else
             {
@@ -625,7 +823,8 @@ void ChangeStatusRoom(int roomid, struct RoomNode *roomHead)
         }
 
         fclose(file);
-        printf("Room status changed and saved to Roomdata.csv.\n");
+        printf("\nYour Reservation successfully!.\n");
+        system("pause");
     }
 }
 
@@ -652,91 +851,74 @@ int main()
         {
             choice = displayMenu();
 
-            switch (choice)
+            if (choice == 1)
             {
-            case 1:
                 displayLogin(memberHead, loggedInUser);
                 if (loggedInUser[0] != '\0')
                 {
-                    user = memberHead;
+                    struct Node *user = memberHead;
                     while (user != NULL)
                     {
                         if (strcmp(user->data.memberID, loggedInUser) == 0)
                         {
-                            loggedIn = 1;
+                            int loggedIn = 1;
+                            while (loggedIn)
+                            {
+                                int cuschoice;
+                                cuschoice = displayCusMenu();
+                                if (cuschoice == 1)
+                                {
+                                    
+                                    // int roomIdReservation = RoomAvailable(roomHead);
+                                    // int userid = atoi(loggedInUser);
+                                    // int roomidReser = Booking(roomHead, roomIdReservation, userid);
+                                    // ChangeStatusRoom(roomidReser, roomHead);
+                                    // reservationDataRead(&ReservationHead);
+                                }
+                                else if (cuschoice == 2)
+                                {
+                                    // Edit account
+                                }
+                                else if (cuschoice == 3)
+                                {
+                                    loggedIn = 0;
+                                    loggedInUser[0] = '\0';
+                                    break;
+                                }
+                                else
+                                {
+                                    printf("Invalid choice. Please try again.\n");
+                                }
+                            }
                             break;
                         }
                         user = user->next;
                     }
-                    if (loggedIn)
-                    {
-                        if (strcmp(user->data.role, "customer") == 0)
-                        {
-                            while (loggedIn)
-                            {
-                                int cuschoice, roomIdReservation;
-                                cuschoice = displayCusMenu();
-
-                                switch (cuschoice)
-                                {
-                                case 1:
-                                    roomIdReservation = RoomAvailable(roomHead);
-                                    int userid = atoi(loggedInUser);
-                                    int roomidReser = Booking(roomHead, roomIdReservation, userid);
-                                    ChangeStatusRoom(roomidReser, roomHead);
-                                    reservationDataRead(&ReservationHead);
-                                    break;
-                                case 2:
-                                    // Change Username
-                                    break;
-                                case 3:
-                                    // Change Username
-                                    break;
-                                case 4:
-                                    // Change Password
-                                    break;
-                                case 5:
-                                    // Change Name
-                                    break;
-                                case 6:
-                                    // Change Tel.
-                                    break;
-                                case 7:
-                                    // Logout
-                                    loggedIn = 0;
-                                    loggedInUser[0] = '\0';
-                                    break;
-                                default:
-                                    printf("Invalid choice. Please try again.\n");
-                                }
-                            }
-                        }
-                        else if (strcmp(user->data.role, "admin") == 0)
-                        {
-                            while (loggedIn)
-                            {
-                            }
-                        }
-                        else if (strcmp(user->data.role, "employee") == 0)
-                        {
-                        }
-                    }
                 }
-                break;
-            case 2:
+            }
+            else if (choice == 2)
+            {
                 // registration
-                break;
-            case 3:
+            }
+            else if (choice == 3)
+            {
                 printf("Exiting the program...\n");
                 exit(0);
-                break;
-            case 4:
-                // Display member
-                break;
-            case 5:
-                // Display room
-                break;
-            default:
+            }
+            else if (choice == 4)
+            {
+                displayMembers(memberHead);
+            }
+            else if (choice == 5)
+            {
+                displayRoom(roomHead);
+            }
+            else if (choice == 6)
+            {
+                displayReservation(ReservationHead);
+            }
+            else
+            {
                 printf("Invalid choice. Please try again.\n");
             }
         }
