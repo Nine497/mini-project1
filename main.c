@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <time.h>
+#include <stdbool.h>
+#include <windows.h>
 
 struct Member
 {
@@ -113,6 +115,7 @@ void displayLogin(struct Node *head, char loggedInUser[])
                 strcmp(current->data.password, password) == 0)
             {
                 printf("Welcome, %s!\n", current->data.firstName);
+                printf("\nPress any key to continue.");
                 strcpy(loggedInUser, current->data.memberID);
                 getch();
                 return;
@@ -175,7 +178,7 @@ int displayMenu()
     return choice;
 }
 
-int displayCusMenu()
+int displayCusMenu(char *userfullname)
 {
     int cuschoice;
 
@@ -183,7 +186,7 @@ int displayCusMenu()
     {
         system("cls");
         printf("=====================================\n");
-        printf("|           Customer Menu           |\n");
+        printf("|          Welcome, %s           |\n", userfullname);
         printf("=====================================\n\n");
 
         printf("1. Reservation\n");
@@ -474,35 +477,69 @@ void displayReservation(struct ReservationNode *ReservationHead)
     getch(); // Wait for user input to continue
 }
 
-int isDateBefore(int day1, int month1, int year1)
+bool validateDate(const char *date)
 {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
+    int day, month, year;
+    // ใช้ sscanf เพื่อแยกวันที่, เดือน, และปีจากสตริง
+    if (sscanf(date, "%d/%d/%d", &day, &month, &year) != 3)
+    {
+        // รูปแบบไม่ถูกต้อง
+        return false;
+    }
 
-    if (year1 < (tm.tm_year + 1900))
+    if (year < 2022 || year > 9999 || month < 1 || month > 12 || day < 1 || day > 31)
     {
-        return 1;
+        printf("1");
+        return false;
     }
-    else if (year1 > (tm.tm_year + 1900))
+
+    if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30)
     {
-        return 0;
+        printf("2");
+        return false;
     }
-    else if (month1 < (tm.tm_mon + 1))
+    else if (month == 2)
     {
-        return 1;
+        if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))
+        {
+            if (day > 29)
+            {
+                printf("3");
+                return false;
+            }
+        }
+        else
+        {
+            if (day > 28)
+            {
+                printf("4");
+                return false;
+            }
+        }
     }
-    else if (month1 > (tm.tm_mon + 1))
+
+    return true;
+}
+
+bool isDateBefore(const char *checkinDate, const char *checkoutDate)
+{
+    int checkinDay, checkinMonth, checkinYear;
+    int checkoutDay, checkoutMonth, checkoutYear;
+
+    if (sscanf(checkinDate, "%d/%d/%d", &checkinDay, &checkinMonth, &checkinYear) != 3 ||
+        sscanf(checkoutDate, "%d/%d/%d", &checkoutDay, &checkoutMonth, &checkoutYear) != 3)
     {
-        return 0; //
+        return false; // รูปแบบวันที่ไม่ถูกต้อง
     }
-    else if (day1 < tm.tm_mday)
+
+    if (checkinYear < checkoutYear ||
+        (checkinYear == checkoutYear && checkinMonth < checkoutMonth) ||
+        (checkinYear == checkoutYear && checkinMonth == checkoutMonth && checkinDay < checkoutDay))
     {
-        return 1;
+        return true; // checkinDate อยู่ก่อน checkoutDate
     }
-    else
-    {
-        return 0;
-    }
+
+    return false; // checkinDate ไม่อยู่ก่อน checkoutDate
 }
 
 long generateBookingID(int userID)
@@ -519,90 +556,111 @@ long generateBookingID(int userID)
     return bookingID;
 }
 
-int isRoomAvailable(struct RoomNode *roomsHead, const char *roomID)
+int CheckRoomAvailable(struct ReservationNode *ReservationHead, int RoomID, char *checkinDate, char *checkoutDate)
 {
-    struct RoomNode *currentRoom = roomsHead;
+    struct ReservationNode *currentReservation = ReservationHead;
+    char RoomidInput[50];
+    sprintf(RoomidInput, "%d", RoomID);
 
-    while (currentRoom != NULL)
+    struct tm checkin_tm;
+    struct tm checkout_tm;
+    struct tm checkin_res_tm;
+    struct tm checkout_res_tm;
+
+    memset(&checkin_tm, 0, sizeof(struct tm));
+    memset(&checkout_tm, 0, sizeof(struct tm));
+    memset(&checkin_res_tm, 0, sizeof(struct tm));
+    memset(&checkout_res_tm, 0, sizeof(struct tm));
+
+    int day, month, year;
+
+    if (sscanf(checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        if (strcmp(currentRoom->data.roomID, roomID) == 0 && strcmp(currentRoom->data.status, "Occupied") == 0)
-        {
-            return 0;
-        }
-        currentRoom = currentRoom->next;
-    }
-
-    return 1;
-}
-
-int RoomAvailable(struct RoomNode *roomsHead)
-{
-    char RoomID[10];
-    system("cls");
-    printf("=====================================\n");
-    printf("|        Room Available               |\n");
-    printf("=====================================\n\n");
-
-    struct RoomNode *currentRoom = roomsHead;
-    int roomCount = 0;
-
-    while (currentRoom != NULL)
-    {
-        if (strcmp(currentRoom->data.status, "Occupied") == 1)
-        {
-            printf("Room %s ---------------------- \n", currentRoom->data.roomID);
-            printf("Type : %s \n", currentRoom->data.roomType);
-            printf("Status : %s \n\n", currentRoom->data.status);
-            roomCount++;
-        }
-        currentRoom = currentRoom->next;
-    }
-
-    if (roomCount == 0)
-    {
-        printf("No rooms are currently available.\n");
-        printf("Press 0 to go back to the main menu: ");
-        scanf("%s", RoomID);
-
-        if (strcmp(RoomID, "0") == 0)
-        {
-            return 0;
-        }
-
-        printf("Invalid choice. Please try again.\n");
+        // การแปลงวันที่ไม่สำเร็จ
+        printf("Invalid check-in date format.\n");
         return -1;
     }
+    checkin_tm.tm_mday = day;
+    checkin_tm.tm_mon = month - 1;
+    checkin_tm.tm_year = year - 1900;
 
-    while (1)
+    if (sscanf(checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        printf("Choose a room (or 0 to go back to the main menu): ");
-        scanf("%s", RoomID);
-
-        if (strcmp(RoomID, "0") == 0)
-        {
-            return 0;
-        }
-
-        if (isRoomAvailable(roomsHead, RoomID))
-        {
-            return atoi(RoomID);
-        }
-        else
-        {
-            printf("Room with ID %s is already booked.\n", RoomID);
-        }
+        // การแปลงวันที่ไม่สำเร็จ
+        printf("Invalid check-out date format.\n");
+        return -1;
     }
+    checkout_tm.tm_mday = day;
+    checkout_tm.tm_mon = month - 1;
+    checkout_tm.tm_year = year - 1900;
+
+    while (currentReservation != NULL)
+    {
+        if (strcmp(RoomidInput, currentReservation->data.roomID) == 0)
+        {
+            if (sscanf(currentReservation->data.checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
+            {
+                // การแปลงวันที่ไม่สำเร็จ
+                printf("Invalid date format in reservation data.\n");
+                return -1;
+            }
+            checkin_res_tm.tm_mday = day;
+            checkin_res_tm.tm_mon = month - 1;
+            checkin_res_tm.tm_year = year - 1900;
+
+            if (sscanf(currentReservation->data.checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
+            {
+                // การแปลงวันที่ไม่สำเร็จ
+                printf("Invalid date format in reservation data.\n");
+                return -1;
+            }
+            checkout_res_tm.tm_mday = day;
+            checkout_res_tm.tm_mon = month - 1;
+            checkout_res_tm.tm_year = year - 1900;
+
+            if (mktime(&checkin_tm) <= mktime(&checkout_res_tm) && mktime(&checkout_tm) >= mktime(&checkin_res_tm))
+            {
+                // หากมีการจองในช่วงเวลานี้
+                return 1;
+            }
+        }
+        currentReservation = currentReservation->next;
+    }
+
+    // ห้องไม่ถูกจองในช่วงเวลาที่กำหนด
+    return 0;
 }
 
 int calculateNights(int checkinday, int checkinmonth, int checkinyear, int checkoutday, int checkoutmonth, int checkoutyear)
 {
-    int nights = (checkoutyear - checkinyear) * 360 + (checkoutmonth - checkinmonth) * 30 + (checkoutday - checkinday);
+    int nights = 0;
+
+    while (checkinday != checkoutday || checkinmonth != checkoutmonth || checkinyear != checkoutyear)
+    {
+        nights++;
+        checkinday++;
+
+        if ((checkinday == 31 && (checkinmonth == 4 || checkinmonth == 6 || checkinmonth == 9 || checkinmonth == 11)) ||
+            (checkinday == 32 && !(checkinmonth == 4 || checkinmonth == 6 || checkinmonth == 9 || checkinmonth == 11)))
+        {
+            checkinday = 1;
+            checkinmonth++;
+        }
+
+        if (checkinmonth > 12)
+        {
+            checkinmonth = 1;
+            checkinyear++;
+        }
+    }
 
     return nights;
 }
 
 void SaveReservation(int userID, int roomID, char *checkinDate, char *checkoutDate, char *bookingID)
 {
+    printf("checkinDate : %s\n", checkinDate);
+    printf("checkoutDate : %s\n", checkoutDate);
     FILE *file = fopen("Reservation.csv", "a");
     if (file == NULL)
     {
@@ -635,145 +693,77 @@ void printLoadingAnimation(int seconds)
     {
         printf("Waiting for payment verification... %c\r", animation[i % 4]);
         fflush(stdout);
-        usleep(500000);
+        Sleep(5000);
     }
     printf("Payment verification complete!\n");
 }
 
-int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID)
+int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checkinDate, char *checkoutDate)
 {
-    int Checkinday, Checkinmonth, Checkinyear, Checkoutday, Checkoutmonth, Checkoutyear;
+    char checkinDateSend[50];
+    char checkoutDateSend[50];
+    strcpy(checkinDateSend, checkinDate);
+    strcpy(checkoutDateSend, checkoutDate);
+
+    int datecheckin = atoi(strtok(checkinDate, "/"));
+    int monthcheckin = atoi(strtok(NULL, "/"));
+    int yearcheckin = atoi(strtok(NULL, "/"));
+
+    int datecheckout = atoi(strtok(checkoutDate, "/"));
+    int monthcheckout = atoi(strtok(NULL, "/"));
+    int yearcheckout = atoi(strtok(NULL, "/"));
+
     char UserRoom[50];
     struct RoomNode *currentRoom = roomsHead;
     int returnToMainMenu = 0;
 
     while (currentRoom != NULL)
     {
+        printf("Room %s ---------------------- \n", currentRoom->data.roomID);
         if (atoi(currentRoom->data.roomID) == UserRoomId)
         {
-            if (strcmp(currentRoom->data.status, "Occupied") == 1)
+            system("cls");
+            printf("=====================================\n");
+            printf("|        Booking                    |\n");
+            printf("=====================================\n\n");
+            printf("Room %s ---------------------- \n", currentRoom->data.roomID);
+            printf("Type : %s \n", currentRoom->data.roomType);
+            printf("Status : %s \n", currentRoom->data.status);
+            printf("Price per night : %s\n\n", currentRoom->data.price);
+            printf("Input '99' to return to the main menu...\n\n");
+
+            int nights = calculateNights(datecheckin, monthcheckin, yearcheckin, datecheckout, monthcheckout, yearcheckout);
+
+            if (nights <= 0)
             {
-                system("cls");
-                printf("=====================================\n");
-                printf("|        Booking                    |\n");
-                printf("=====================================\n\n");
-                printf("Room %s ---------------------- \n", currentRoom->data.roomID);
-                printf("Type : %s \n", currentRoom->data.roomType);
-                printf("Status : %s \n", currentRoom->data.status);
-                printf("Price per night : %s\n\n", currentRoom->data.price);
-                printf("Input '99' to return to the main menu...\n\n");
-
-                while (1)
-                {
-                    printf("Enter a Check in date (dd/mm/yyyy): ");
-                    scanf("%d/%d/%d", &Checkinday, &Checkinmonth, &Checkinyear);
-
-                    if (Checkinday == 99)
-                    {
-                        returnToMainMenu = 1;
-                        break;
-                    }
-
-                    if (Checkinday <= 0 || Checkinday > 30 || Checkinmonth <= 0 || Checkinmonth > 12 || Checkinyear < 2021)
-                    {
-                        printf("Invalid check-in date.\n");
-                        getch();
-                    }
-                    else if (!isDateBefore(Checkinday, Checkinmonth, Checkinyear))
-                    {
-                        printf("Invalid check-in date. Check-out date must be after today's date.\n");
-                        getch();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (returnToMainMenu)
-                {
-                    break;
-                }
-
-                while (1)
-                {
-                    printf("Enter a Check out date (dd/mm/yyyy): ");
-                    scanf("%d/%d/%d", &Checkoutday, &Checkoutmonth, &Checkoutyear);
-
-                    if (Checkoutday == 99)
-                    {
-                        returnToMainMenu = 1;
-                        break;
-                    }
-
-                    if (Checkoutday <= 0 || Checkoutday > 30 || Checkoutmonth <= 0 || Checkoutmonth > 12 || Checkoutyear < 2021)
-                    {
-                        printf("Invalid check-out date.\n");
-                        getch();
-                    }
-                    else if (!isDateBefore(Checkoutday, Checkoutmonth, Checkoutyear))
-                    {
-                        printf("Invalid check-out date. Check-out date must be after today's date.\n");
-                        getch();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (returnToMainMenu)
-                {
-                    break;
-                }
-
-                int nights = calculateNights(Checkinday, Checkinmonth, Checkinyear, Checkoutday, Checkoutmonth, Checkoutyear);
-
-                if (nights <= 0)
-                {
-                    printf("Invalid dates. Check-out date must be after check-in date.\n");
-                    getch();
-                }
-                else
-                {
-                    int roomPrice = atoi(currentRoom->data.price);
-                    int total = nights * roomPrice;
-                    printf("---------------------------------------------\n");
-                    printf("Total price for %d nights: %d\n", nights, total);
-
-                    char bookingID[50];
-                    sprintf(bookingID, "%d", generateBookingID(userID));
-
-                    int roomidReser = atoi(currentRoom->data.roomID);
-
-                    char checkindate[50];
-                    sprintf(checkindate, "%d/%d/%d", Checkinday, Checkinmonth, Checkinyear);
-
-                    char checkoutdate[50];
-                    sprintf(checkoutdate, "%d/%d/%d", Checkoutday, Checkoutmonth, Checkoutyear);
-
-                    SaveReservation(userID, roomidReser, checkindate, checkoutdate, bookingID);
-
-                    printf("Press any key to make a payment...\n");
-                    getch();
-                    payment();
-                    printf("Press any key when you paid...\n");
-                    getch();
-                    printf("---------------------------------------------");
-                    printLoadingAnimation(5);
-
-                    return roomidReser;
-                }
-                break;
+                printf("Invalid dates. Check-out date must be after check-in date.\n");
+                getch();
             }
             else
             {
-                printf("Room with ID %d is already booked.\n", UserRoomId);
-                getch();
-                break;
-            }
-        }
+                int roomPrice = atoi(currentRoom->data.price);
+                int total = nights * roomPrice;
+                printf("---------------------------------------------\n");
+                printf("Total price for %d nights: %d\n", nights, total);
 
+                char bookingID[50];
+                sprintf(bookingID, "%d", generateBookingID(userID));
+
+                int roomidReser = atoi(currentRoom->data.roomID);
+
+                SaveReservation(userID, roomidReser, checkinDateSend, checkoutDateSend, bookingID);
+
+                printf("Press any key to make a payment...\n");
+                getch();
+                payment();
+                printf("Press any key when you paid...\n");
+                getch();
+                printf("---------------------------------------------");
+
+                return roomidReser;
+            }
+            break;
+        }
         currentRoom = currentRoom->next;
     }
 
@@ -784,48 +774,197 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID)
     }
 }
 
-void ChangeStatusRoom(int roomid, struct RoomNode *roomHead)
+int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *ReservationHead, char *checkinDate, char *checkoutDate, int userid)
 {
-    struct RoomNode *currentRoom = roomHead;
-    char roomID[50];
-    sprintf(roomID, "%d", roomid);
+    struct ReservationNode *currentReservation = ReservationHead;
+    struct RoomNode *currentRoom = roomsHead;
+    int availableRoomCount = 0;
+    int availableRoomIDs[100];
+    int RoomID;
+    struct tm checkin_tm;
+    struct tm checkout_tm;
+
+    memset(&checkin_tm, 0, sizeof(struct tm));
+    memset(&checkout_tm, 0, sizeof(struct tm));
+
+    int day, month, year;
+
+    if (sscanf(checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
+    {
+        // การแปลงวันที่ไม่สำเร็จ
+        printf("Invalid date format.\n");
+        return -1;
+    }
+
+    checkin_tm.tm_mday = day;
+    checkin_tm.tm_mon = month - 1;
+    checkin_tm.tm_year = year - 1900;
+
+    if (sscanf(checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
+    {
+        // การแปลงวันที่ไม่สำเร็จ
+        printf("Invalid date format.\n");
+        return -1;
+    }
+
+    checkout_tm.tm_mday = day;
+    checkout_tm.tm_mon = month - 1;
+    checkout_tm.tm_year = year - 1900;
 
     while (currentRoom != NULL)
     {
-        if (strcmp(currentRoom->data.roomID, roomID) == 0)
+        int isRoomBooked = 0;
+
+        while (currentReservation != NULL)
         {
-            strcpy(currentRoom->data.status, "Occupied");
-            break;
+            struct tm checkin_res_tm;
+            struct tm checkout_res_tm;
+
+            memset(&checkin_res_tm, 0, sizeof(struct tm));
+            memset(&checkout_res_tm, 0, sizeof(struct tm));
+
+            if (strcmp(currentRoom->data.roomID, currentReservation->data.roomID) == 0)
+            {
+                if (sscanf(currentReservation->data.checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
+                {
+                    // การแปลงวันที่ไม่สำเร็จ
+                    printf("Invalid date format in reservation data.\n");
+                    return -1;
+                }
+
+                checkin_res_tm.tm_mday = day;
+                checkin_res_tm.tm_mon = month - 1;
+                checkin_res_tm.tm_year = year - 1900;
+
+                if (sscanf(currentReservation->data.checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
+                {
+                    // การแปลงวันที่ไม่สำเร็จ
+                    printf("Invalid date format in reservation data.\n");
+                    return -1;
+                }
+
+                checkout_res_tm.tm_mday = day;
+                checkout_res_tm.tm_mon = month - 1;
+                checkout_res_tm.tm_year = year - 1900;
+
+                if (mktime(&checkin_tm) <= mktime(&checkout_res_tm) && mktime(&checkout_tm) >= mktime(&checkin_res_tm))
+                {
+                    // หากมีการจองในช่วงเวลานี้
+                    isRoomBooked = 1;
+                    break;
+                }
+            }
+            currentReservation = currentReservation->next;
         }
+
+        if (!isRoomBooked)
+        {
+            // เพิ่ม RoomID ลงในอาร์เรย์
+            availableRoomIDs[availableRoomCount] = atoi(currentRoom->data.roomID);
+            availableRoomCount++;
+
+            // แสดงข้อมูลของห้องว่าง
+            printf("Room %s ---------------------- \n", currentRoom->data.roomID);
+            printf("Type : %s \n", currentRoom->data.roomType);
+            printf("Status : %s \n\n", currentRoom->data.status);
+        }
+
+        // รีเซ็ตตัวชี้การจองกลับไปที่หัว
+        currentReservation = ReservationHead;
         currentRoom = currentRoom->next;
     }
 
-    if (currentRoom == NULL)
+    if (availableRoomCount == 0)
     {
-        printf("Room with ID %s not found.\n", roomID);
+        printf("No available rooms in the specified period.\n");
     }
-    else
+
+    while (1)
     {
-        FILE *file = fopen("Roomdata.csv", "w");
-        if (file == NULL)
+        printf("Choose a room (or 0 to go back to the main menu): ");
+        scanf("%d", &RoomID);
+
+        if (RoomID == 0)
         {
-            printf("Failed to open Roomdata.csv for writing.\n");
-            return;
+            return 0;
         }
 
-        fprintf(file, "roomID,roomType,status,price\n");
-
-        currentRoom = roomHead;
-        while (currentRoom != NULL)
+        int f;
+        for (f = 0; f < availableRoomCount; f++)
         {
-            fprintf(file, "%s,%s,%s,%s", currentRoom->data.roomID, currentRoom->data.roomType, currentRoom->data.status, currentRoom->data.price);
-            currentRoom = currentRoom->next;
+            printf("availableRoomIDs[%d] :%d\n", f, availableRoomIDs[f]);
+        }
+        getch();
+        int isRoomValid = 0;
+        int i;
+        for (i = 0; i < availableRoomCount; i++)
+        {
+            if (availableRoomIDs[i] == RoomID)
+            {
+                isRoomValid = 1;
+                Booking(roomsHead, RoomID, userid, checkinDate, checkoutDate);
+                return RoomID;
+            }
         }
 
-        fclose(file);
-        printf("\nYour Reservation successfully!.\n");
-        system("pause");
+        if (!isRoomValid)
+        {
+            printf("\nInvalid room id input");
+        }
     }
+}
+
+// ฟังก์ชันแสดงรายการห้องที่ว่างและให้ผู้ใช้เลือก
+int RoomAvailable(struct RoomNode *roomsHead, struct ReservationNode *ReservationHead, int userid)
+{
+    char checkinDate[50];
+    char checkoutDate[50];
+    system("cls");
+
+    while (1)
+    {
+        printf("Enter a Check in date (dd/mm/yyyy): ");
+        scanf("%s", checkinDate);
+
+        if (strcmp(checkinDate, "99/99/9999") == 0)
+        {
+            return 0;
+        }
+
+        if (!validateDate(checkinDate))
+        {
+            printf("Invalid check-in date. Please enter a valid date.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    while (1)
+    {
+        printf("Enter a Check out date (dd/mm/yyyy): ");
+        scanf("%s", checkoutDate);
+
+        if (strcmp(checkoutDate, "99/99/9999") == 0)
+        {
+            return 0;
+        }
+
+        if (!validateDate(checkoutDate) || !isDateBefore(checkinDate, checkoutDate))
+        {
+            printf("Invalid check-out date. Please enter a valid date.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    printf("=====================================\n");
+    printf("|        Room Available               |\n");
+    printf("=====================================\n\n");
+    return displayAvailableRooms(roomsHead, ReservationHead, checkinDate, checkoutDate, userid);
 }
 
 int main()
@@ -865,15 +1004,16 @@ int main()
                             while (loggedIn)
                             {
                                 int cuschoice;
-                                cuschoice = displayCusMenu();
+                                char userfullname[50];
+                                strcpy(userfullname, user->data.firstName);
+                                strcat(userfullname, " ");
+                                strcat(userfullname, user->data.lastName);
+                                cuschoice = displayCusMenu(userfullname);
                                 if (cuschoice == 1)
                                 {
-                                    
-                                    // int roomIdReservation = RoomAvailable(roomHead);
-                                    // int userid = atoi(loggedInUser);
-                                    // int roomidReser = Booking(roomHead, roomIdReservation, userid);
-                                    // ChangeStatusRoom(roomidReser, roomHead);
-                                    // reservationDataRead(&ReservationHead);
+                                    int userid = atoi(loggedInUser);
+                                    int roomIdReservation = RoomAvailable(roomHead, ReservationHead, userid);
+                                    reservationDataRead(&ReservationHead);
                                 }
                                 else if (cuschoice == 2)
                                 {
