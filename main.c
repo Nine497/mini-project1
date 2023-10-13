@@ -185,13 +185,14 @@ int displayCusMenu(char *userfullname)
     while (1)
     {
         system("cls");
-        printf("=====================================\n");
-        printf("|          Welcome, %s           |\n", userfullname);
-        printf("=====================================\n\n");
+        printf("=========================================================\n");
+        printf("          Welcome, %s           \n", userfullname);
+        printf("=========================================================\n\n");
 
         printf("1. Reservation\n");
-        printf("2. Edit account\n");
-        printf("3. Log out\n");
+        printf("2. Your Reservation\n");
+        printf("3. Edit account\n");
+        printf("4. Log out\n");
 
         printf("Enter your choice: ");
 
@@ -204,9 +205,9 @@ int displayCusMenu(char *userfullname)
             continue;
         }
 
-        if (cuschoice < 1 || cuschoice > 3)
+        if (cuschoice < 1 || cuschoice > 4)
         {
-            printf("Invalid choice. Please enter a valid option between 1-3.\n");
+            printf("Invalid choice. Please enter a valid option between 1-4.\n");
             system("pause");
         }
         else
@@ -256,8 +257,10 @@ struct Room
 {
     char roomID[50];
     char roomType[50];
+    char bed[50];
+    char size[50];
+    char Guests[50];
     char price[50];
-    char status[50];
 };
 
 struct RoomNode
@@ -293,7 +296,11 @@ void RoomDataRead(struct RoomNode **head)
         token = strtok(NULL, ",");
         strcpy(room.roomType, token);
         token = strtok(NULL, ",");
-        strcpy(room.status, token);
+        strcpy(room.bed, token);
+        token = strtok(NULL, ",");
+        strcpy(room.size, token);
+        token = strtok(NULL, ",");
+        strcpy(room.Guests, token);
         token = strtok(NULL, ",");
         strcpy(room.price, token);
 
@@ -344,7 +351,9 @@ void displayRoom(struct RoomNode *head)
         printf("Room ID: %s\n", current->data.roomID);
         printf("Room Type: %s\n", current->data.roomType);
         printf("Price per night: %s", current->data.price);
-        printf("Status: %s\n", current->data.status);
+        printf("Bed: %s\n", current->data.bed);
+        printf("Room size: %s\n", current->data.size);
+        printf("Guests : %s\n", current->data.Guests);
         printf("-------------------------------\n");
         current = current->next;
         roomCount++;
@@ -357,6 +366,7 @@ struct Reservation
     char bookingID[50];
     char memberID[50];
     char roomID[50];
+    char total[50];
     char checkinDate[50];
     char checkoutDate[50];
 };
@@ -415,6 +425,8 @@ void reservationDataRead(struct ReservationNode **ReservationHead)
         token = strtok(NULL, ",");
         strcpy(reservation.roomID, token);
         token = strtok(NULL, ",");
+        strcpy(reservation.total, token);
+        token = strtok(NULL, ",");
         strcpy(reservation.checkinDate, token);
         token = strtok(NULL, ",");
         strcpy(reservation.checkoutDate, token);
@@ -445,6 +457,53 @@ void reservationDataRead(struct ReservationNode **ReservationHead)
     fclose(file);
 }
 
+void displayUserReservation(struct RoomNode *roomsHead, struct ReservationNode *ReservationHead, int userid)
+{
+    system("cls"); // Clear the screen
+    char UserID[50];
+    sprintf(UserID, "%d", userid);
+    printf("==========================================\n");
+    printf("|         Your Reservation Details       |\n");
+    printf("==========================================\n\n");
+    if (ReservationHead == NULL)
+    {
+        printf("No reservations found.\n");
+        return;
+    }
+
+    struct ReservationNode *Reservationcurrent = ReservationHead;
+
+    while (Reservationcurrent != NULL)
+    {
+        if (strcmp(UserID, Reservationcurrent->data.memberID) == 0)
+        {
+            struct RoomNode *Roomcurrent = roomsHead;
+            printf("Booking ID: %s--------------------\n", Reservationcurrent->data.bookingID);
+            printf("Room ID: %s\n", Reservationcurrent->data.roomID);
+            while (Roomcurrent != NULL)
+            {
+                if (strcmp(Reservationcurrent->data.roomID, Roomcurrent->data.roomID) == 0)
+                {
+                    printf("Room Type: %s\n", Roomcurrent->data.roomType);
+                    printf("Bed: %s\n", Roomcurrent->data.bed);
+                    printf("Room size: %s\n", Roomcurrent->data.size);
+                    printf("Guests : %s\n", Roomcurrent->data.Guests);
+                }
+                Roomcurrent = Roomcurrent->next;
+            }
+            printf("Price Total : %s\n", Reservationcurrent->data.total);
+            printf("Check-in Date: %s\n", Reservationcurrent->data.checkinDate);
+            printf("Check-out Date: %s\n", Reservationcurrent->data.checkoutDate);
+            printf("---------------------------------------------\n\n");
+        }
+        Reservationcurrent = Reservationcurrent->next;
+    }
+
+    printf("Press any key to back to menu...");
+    getch(); // Wait for user input to continue
+    return;
+}
+
 void displayReservation(struct ReservationNode *ReservationHead)
 {
     system("cls"); // Clear the screen
@@ -466,6 +525,7 @@ void displayReservation(struct ReservationNode *ReservationHead)
         printf("Booking ID: %s\n", current->data.bookingID);
         printf("Member ID: %s\n", current->data.memberID);
         printf("Room ID: %s\n", current->data.roomID);
+        printf("Price Total : %s\n", current->data.total);
         printf("Check-in Date: %s\n", current->data.checkinDate);
         printf("Check-out Date: %s\n", current->data.checkoutDate);
         printf("-------------------------------\n\n");
@@ -657,10 +717,9 @@ int calculateNights(int checkinday, int checkinmonth, int checkinyear, int check
     return nights;
 }
 
-void SaveReservation(int userID, int roomID, char *checkinDate, char *checkoutDate, char *bookingID)
+void SaveReservation(int userID, int roomID, char *checkinDate, char *checkoutDate, char *bookingID, int total)
 {
-    printf("checkinDate : %s\n", checkinDate);
-    printf("checkoutDate : %s\n", checkoutDate);
+    printf("%d", total);
     FILE *file = fopen("Reservation.csv", "a");
     if (file == NULL)
     {
@@ -668,7 +727,7 @@ void SaveReservation(int userID, int roomID, char *checkinDate, char *checkoutDa
         return;
     }
 
-    fprintf(file, "%s,%d,%d,%s,%s\n", bookingID, userID, roomID, checkinDate, checkoutDate);
+    fprintf(file, "%s,%d,%d,%d,%s,%s\n", bookingID, userID, roomID, total, checkinDate, checkoutDate);
 
     fclose(file);
 }
@@ -728,7 +787,9 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checki
             printf("=====================================\n\n");
             printf("Room %s ---------------------- \n", currentRoom->data.roomID);
             printf("Type : %s \n", currentRoom->data.roomType);
-            printf("Status : %s \n", currentRoom->data.status);
+            printf("Bed: %s\n", currentRoom->data.bed);
+            printf("Room size: %s\n", currentRoom->data.size);
+            printf("Guests : %s\n", currentRoom->data.Guests);
             printf("Price per night : %s\n\n", currentRoom->data.price);
             printf("Input '99' to return to the main menu...\n\n");
 
@@ -744,6 +805,8 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checki
                 int roomPrice = atoi(currentRoom->data.price);
                 int total = nights * roomPrice;
                 printf("---------------------------------------------\n");
+                printf("Check in Date : %s\n", checkinDateSend);
+                printf("Check out Date : %s\n", checkoutDateSend);
                 printf("Total price for %d nights: %d\n", nights, total);
 
                 char bookingID[50];
@@ -751,12 +814,11 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checki
 
                 int roomidReser = atoi(currentRoom->data.roomID);
 
-                SaveReservation(userID, roomidReser, checkinDateSend, checkoutDateSend, bookingID);
-
                 printf("Press any key to make a payment...\n");
                 getch();
                 payment();
                 printf("Press any key when you paid...\n");
+                SaveReservation(userID, roomidReser, checkinDateSend, checkoutDateSend, bookingID, total);
                 getch();
                 printf("---------------------------------------------");
 
@@ -866,7 +928,9 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
             // แสดงข้อมูลของห้องว่าง
             printf("Room %s ---------------------- \n", currentRoom->data.roomID);
             printf("Type : %s \n", currentRoom->data.roomType);
-            printf("Status : %s \n\n", currentRoom->data.status);
+            printf("Bed: %s\n", currentRoom->data.bed);
+            printf("Room size: %s\n", currentRoom->data.size);
+            printf("Guests : %s\n", currentRoom->data.Guests);
         }
 
         // รีเซ็ตตัวชี้การจองกลับไปที่หัว
@@ -889,12 +953,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
             return 0;
         }
 
-        int f;
-        for (f = 0; f < availableRoomCount; f++)
-        {
-            printf("availableRoomIDs[%d] :%d\n", f, availableRoomIDs[f]);
-        }
-        getch();
         int isRoomValid = 0;
         int i;
         for (i = 0; i < availableRoomCount; i++)
@@ -1004,6 +1062,7 @@ int main()
                             while (loggedIn)
                             {
                                 int cuschoice;
+                                int userid = atoi(loggedInUser);
                                 char userfullname[50];
                                 strcpy(userfullname, user->data.firstName);
                                 strcat(userfullname, " ");
@@ -1011,15 +1070,18 @@ int main()
                                 cuschoice = displayCusMenu(userfullname);
                                 if (cuschoice == 1)
                                 {
-                                    int userid = atoi(loggedInUser);
                                     int roomIdReservation = RoomAvailable(roomHead, ReservationHead, userid);
                                     reservationDataRead(&ReservationHead);
                                 }
                                 else if (cuschoice == 2)
                                 {
-                                    // Edit account
+                                    displayUserReservation(roomHead, ReservationHead, userid);
                                 }
                                 else if (cuschoice == 3)
+                                {
+                                    // Edit account
+                                }
+                                else if (cuschoice == 4)
                                 {
                                     loggedIn = 0;
                                     loggedInUser[0] = '\0';
