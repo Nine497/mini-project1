@@ -1,3 +1,4 @@
+#define MAX 50
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -5,6 +6,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <windows.h>
+#include <ctype.h>
 
 struct Member
 {
@@ -149,9 +151,6 @@ int displayMenu()
         printf("1. Login\n");
         printf("2. Register\n");
         printf("3. Exit\n");
-        printf("4. Show members\n");
-        printf("5. Show Room\n");
-        printf("6. Show Reservation\n");
 
         printf("Enter your choice: ");
 
@@ -164,7 +163,7 @@ int displayMenu()
             continue;
         }
 
-        if (choice < 1 || choice > 6)
+        if (choice < 1 || choice > 3)
         {
             printf("Invalid choice. Please enter a valid option between 1-5.\n");
             system("pause");
@@ -217,6 +216,47 @@ int displayCusMenu(char *userfullname)
     }
 
     return cuschoice;
+}
+
+int displayEmpMenu(char *userfullname)
+{
+    int Empchoice;
+
+    while (1)
+    {
+        system("cls");
+        printf("=========================================================\n");
+        printf("          Welcome,Employee %s           \n", userfullname);
+        printf("=========================================================\n\n");
+
+        printf("1. Show Reservation\n");
+        printf("2. Show Member\n");
+        printf("3. Show Room\n");
+        printf("4. Log out\n");
+
+        printf("Enter your choice: ");
+
+        if (scanf("%d", &Empchoice) != 1)
+        {
+            while (getchar() != '\n')
+                ;
+            printf("Invalid input. Please enter a valid choice.\n");
+            system("pause");
+            continue;
+        }
+
+        if (Empchoice < 1 || Empchoice > 4)
+        {
+            printf("Invalid choice. Please enter a valid option between 1-4.\n");
+            system("pause");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return Empchoice;
 }
 
 void displayMembers(struct Node *head)
@@ -1025,6 +1065,133 @@ int RoomAvailable(struct RoomNode *roomsHead, struct ReservationNode *Reservatio
     return displayAvailableRooms(roomsHead, ReservationHead, checkinDate, checkoutDate, userid);
 }
 
+bool isAlpha(const char *str)
+{
+    int i;
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (!isalpha(str[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isAlphaNumeric(const char *str)
+{
+    int i;
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (!isalnum(str[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// ฟังก์ชั่นเขียนข้อมูลสมาชิกลงในไฟล์ CSV
+void registration(struct Node *memberHead)
+{
+    char latestMemberID[50] = "0";
+    struct Node *current = memberHead;
+
+    while (current != NULL)
+    {
+        if (atoi(current->data.memberID) > atoi(latestMemberID))
+        {
+            strcpy(latestMemberID, current->data.memberID);
+        }
+        current = current->next;
+    }
+
+    int newMemberID = atoi(latestMemberID) + 1;
+    char role[50] = "customer";
+    char firstName[50], lastName[50], username[50], password[50], tel[50];
+    int age;
+    system("cls");
+    printf("%d\n", newMemberID);
+    printf("==============================\n");
+    printf("|         Registration       |\n");
+    printf("==============================\n\n");
+
+    printf("Enter first name: ");
+    while (1)
+    {
+        scanf("%s", firstName);
+        if (!isAlpha(firstName))
+        {
+            printf("Invalid input for first name. Please enter only alphabetic characters.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    printf("Enter last name: ");
+    while (1)
+    {
+        scanf("%s", lastName);
+        if (!isAlpha(lastName))
+        {
+            printf("Invalid input for last name. Please enter only alphabetic characters.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    printf("Enter username: ");
+    while (1)
+    {
+        scanf("%s", username);
+        if (!isAlphaNumeric(username))
+        {
+            printf("Invalid input for username. Please enter only alphanumeric characters.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    printf("Enter password: ");
+    scanf("%s", password);
+    // You can add more password validation here if needed.
+
+    printf("Enter Age: ");
+    while (1)
+    {
+        if (scanf("%d", &age) != 1)
+        {
+            printf("Invalid input for age. Please enter a valid number.\n");
+            while (getchar() != '\n')
+                ; // Clear the input buffer.
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    printf("Enter tel: ");
+    scanf("%s", tel);
+
+    FILE *file = fopen("member.csv", "a");
+    if (file == NULL)
+    {
+        fprintf(stderr, "Unable to open CSV file\n");
+        exit(1);
+    }
+
+    fprintf(file, "%d,%s,%s,%s,%d,%s,%s,%s\n", newMemberID, firstName, lastName, role, age, username, password, tel);
+
+    fclose(file);
+}
+
 int main()
 {
     struct Node *memberHead = NULL;
@@ -1033,8 +1200,8 @@ int main()
     struct RoomNode *roomHead = NULL;
     RoomDataRead(&roomHead);
 
-    struct ReservationNode *ReservationHead = NULL;
-    reservationDataRead(&ReservationHead);
+    struct ReservationNode *reservationHead = NULL;
+    reservationDataRead(&reservationHead);
 
     int loggedIn = 0;
     char loggedInUser[50] = "";
@@ -1058,38 +1225,69 @@ int main()
                     {
                         if (strcmp(user->data.memberID, loggedInUser) == 0)
                         {
-                            int loggedIn = 1;
+                            loggedIn = 1;
                             while (loggedIn)
                             {
-                                int cuschoice;
-                                int userid = atoi(loggedInUser);
                                 char userfullname[50];
                                 strcpy(userfullname, user->data.firstName);
                                 strcat(userfullname, " ");
                                 strcat(userfullname, user->data.lastName);
-                                cuschoice = displayCusMenu(userfullname);
-                                if (cuschoice == 1)
-                                {
-                                    int roomIdReservation = RoomAvailable(roomHead, ReservationHead, userid);
-                                    reservationDataRead(&ReservationHead);
+
+                                if (strcmp(user->data.role, "customer") == 0)
+                                { // Use double quotes for string comparison
+                                    int cuschoice;
+                                    int userId = atoi(loggedInUser);
+                                    cuschoice = displayCusMenu(userfullname);
+                                    if (cuschoice == 1)
+                                    {
+                                        int roomIdReservation = RoomAvailable(roomHead, reservationHead, userId);
+                                        reservationDataRead(&reservationHead);
+                                    }
+                                    else if (cuschoice == 2)
+                                    {
+                                        displayUserReservation(roomHead, reservationHead, userId);
+                                    }
+                                    else if (cuschoice == 3)
+                                    {
+                                        // Edit account
+                                    }
+                                    else if (cuschoice == 4)
+                                    {
+                                        loggedIn = 0;
+                                        loggedInUser[0] = '\0';
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        printf("Invalid choice. Please try again.\n");
+                                    }
                                 }
-                                else if (cuschoice == 2)
-                                {
-                                    displayUserReservation(roomHead, ReservationHead, userid);
-                                }
-                                else if (cuschoice == 3)
-                                {
-                                    // Edit account
-                                }
-                                else if (cuschoice == 4)
-                                {
-                                    loggedIn = 0;
-                                    loggedInUser[0] = '\0';
-                                    break;
-                                }
-                                else
-                                {
-                                    printf("Invalid choice. Please try again.\n");
+                                else if (strcmp(user->data.role, "employee") == 0)
+                                { // Use double quotes for string comparison
+                                    int Empchoice;
+                                    Empchoice = displayEmpMenu(userfullname);
+                                    if (Empchoice == 1)
+                                    {
+                                        displayReservation(reservationHead);
+                                    }
+                                    else if (Empchoice == 2)
+                                    {
+                                        displayMembers(memberHead);
+                                    }
+                                    else if (Empchoice == 3)
+                                    {
+                                        displayRoom(roomHead);
+                                    }
+                                    else if (Empchoice == 4)
+                                    {
+                                        loggedIn = 0;
+                                        loggedInUser[0] = '\0';
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        printf("Invalid choice. Please try again.\n");
+                                    }
                                 }
                             }
                             break;
@@ -1100,24 +1298,13 @@ int main()
             }
             else if (choice == 2)
             {
-                // registration
+                registration(memberHead);
+                memberDataRead(&memberHead);
             }
             else if (choice == 3)
             {
                 printf("Exiting the program...\n");
                 exit(0);
-            }
-            else if (choice == 4)
-            {
-                displayMembers(memberHead);
-            }
-            else if (choice == 5)
-            {
-                displayRoom(roomHead);
-            }
-            else if (choice == 6)
-            {
-                displayReservation(ReservationHead);
             }
             else
             {
@@ -1126,7 +1313,7 @@ int main()
         }
         else
         {
-            // Handle actions role
+            // Handle actions for a logged-in user
         }
     }
     return 0;
