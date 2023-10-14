@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -190,8 +189,7 @@ int displayCusMenu(char *userfullname)
 
         printf("1. Reservation\n");
         printf("2. Your Reservation\n");
-        printf("3. Edit account\n");
-        printf("4. Log out\n");
+        printf("3. Log out\n");
 
         printf("Enter your choice: ");
 
@@ -204,9 +202,9 @@ int displayCusMenu(char *userfullname)
             continue;
         }
 
-        if (cuschoice < 1 || cuschoice > 4)
+        if (cuschoice < 1 || cuschoice > 3)
         {
-            printf("Invalid choice. Please enter a valid option between 1-4.\n");
+            printf("Invalid choice. Please enter a valid option between 1-3.\n");
             system("pause");
         }
         else
@@ -499,7 +497,7 @@ void reservationDataRead(struct ReservationNode **ReservationHead)
 
 void displayUserReservation(struct RoomNode *roomsHead, struct ReservationNode *ReservationHead, int userid)
 {
-    system("cls"); // Clear the screen
+    system("cls");
     char UserID[50];
     sprintf(UserID, "%d", userid);
     printf("==========================================\n");
@@ -540,13 +538,13 @@ void displayUserReservation(struct RoomNode *roomsHead, struct ReservationNode *
     }
 
     printf("Press any key to back to menu...");
-    getch(); // Wait for user input to continue
+    getch();
     return;
 }
 
 void displayReservation(struct ReservationNode *ReservationHead)
 {
-    system("cls"); // Clear the screen
+    system("cls");
 
     printf("=====================================\n");
     printf("|         Reservation Details       |\n");
@@ -574,16 +572,15 @@ void displayReservation(struct ReservationNode *ReservationHead)
     }
 
     printf("Press any key to continue...");
-    getch(); // Wait for user input to continue
+    getch();
 }
 
 bool validateDate(const char *date)
 {
     int day, month, year;
-    // ใช้ sscanf เพื่อแยกวันที่, เดือน, และปีจากสตริง
+
     if (sscanf(date, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        // รูปแบบไม่ถูกต้อง
         return false;
     }
 
@@ -629,7 +626,7 @@ bool isDateBefore(const char *checkinDate, const char *checkoutDate)
     if (sscanf(checkinDate, "%d/%d/%d", &checkinDay, &checkinMonth, &checkinYear) != 3 ||
         sscanf(checkoutDate, "%d/%d/%d", &checkoutDay, &checkoutMonth, &checkoutYear) != 3)
     {
-        return false; // รูปแบบวันที่ไม่ถูกต้อง
+        return false;
     }
 
     if (checkinYear < checkoutYear ||
@@ -676,7 +673,6 @@ int CheckRoomAvailable(struct ReservationNode *ReservationHead, int RoomID, char
 
     if (sscanf(checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        // การแปลงวันที่ไม่สำเร็จ
         printf("Invalid check-in date format.\n");
         return -1;
     }
@@ -686,7 +682,6 @@ int CheckRoomAvailable(struct ReservationNode *ReservationHead, int RoomID, char
 
     if (sscanf(checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        // การแปลงวันที่ไม่สำเร็จ
         printf("Invalid check-out date format.\n");
         return -1;
     }
@@ -700,7 +695,6 @@ int CheckRoomAvailable(struct ReservationNode *ReservationHead, int RoomID, char
         {
             if (sscanf(currentReservation->data.checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
             {
-                // การแปลงวันที่ไม่สำเร็จ
                 printf("Invalid date format in reservation data.\n");
                 return -1;
             }
@@ -710,7 +704,6 @@ int CheckRoomAvailable(struct ReservationNode *ReservationHead, int RoomID, char
 
             if (sscanf(currentReservation->data.checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
             {
-                // การแปลงวันที่ไม่สำเร็จ
                 printf("Invalid date format in reservation data.\n");
                 return -1;
             }
@@ -720,14 +713,12 @@ int CheckRoomAvailable(struct ReservationNode *ReservationHead, int RoomID, char
 
             if (mktime(&checkin_tm) <= mktime(&checkout_res_tm) && mktime(&checkout_tm) >= mktime(&checkin_res_tm))
             {
-                // หากมีการจองในช่วงเวลานี้
                 return 1;
             }
         }
         currentReservation = currentReservation->next;
     }
 
-    // ห้องไม่ถูกจองในช่วงเวลาที่กำหนด
     return 0;
 }
 
@@ -759,7 +750,6 @@ int calculateNights(int checkinday, int checkinmonth, int checkinyear, int check
 
 void SaveReservation(int userID, int roomID, char *checkinDate, char *checkoutDate, char *bookingID, int total)
 {
-    printf("%d", total);
     FILE *file = fopen("Reservation.csv", "a");
     if (file == NULL)
     {
@@ -782,20 +772,6 @@ void payment()
     printf("|                                   |\n");
     printf("|-----------------------------------|\n");
     return;
-}
-
-void printLoadingAnimation(int seconds)
-{
-    char animation[] = "|/-\\";
-    int i;
-    for (i = 0; i < seconds * 2; i++)
-    {
-        printf("Waiting for payment verification... %c\r", animation[i % 4]);
-        fflush(stdout);
-        Sleep(5000);
-    }
-    printf("Payment verification complete!\n");
-    getch();
 }
 
 int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checkinDate, char *checkoutDate)
@@ -832,7 +808,6 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checki
             printf("Room size: %s\n", currentRoom->data.size);
             printf("Guests : %s\n", currentRoom->data.Guests);
             printf("Price per night : %s\n\n", currentRoom->data.price);
-            printf("Input '99' to return to the main menu...\n\n");
 
             int nights = calculateNights(datecheckin, monthcheckin, yearcheckin, datecheckout, monthcheckout, yearcheckout);
 
@@ -852,18 +827,37 @@ int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checki
 
                 char bookingID[50];
                 sprintf(bookingID, "%d", generateBookingID(userID));
-
+                char confirm[2];
                 int roomidReser = atoi(currentRoom->data.roomID);
+                while (1)
+                {
+                    printf("Type 'c' if you confirm booking or\n");
+                    printf("Type 'q' if you cancel booking and back to menu\n");
+                    printf("Your input :");
+                    scanf("%s", confirm);
 
-                printf("Press any key to make a payment...\n");
-                getch();
-                payment();
-                printf("Press any key when you paid...\n");
-                SaveReservation(userID, roomidReser, checkinDateSend, checkoutDateSend, bookingID, total);
-                getch();
-                printf("---------------------------------------------");
-
-                return roomidReser;
+                    if (strcmp(confirm, "c") == 0)
+                    {
+                        printf("Press any key to make a payment...\n");
+                        getch();
+                        payment();
+                        printf("Press any key when you paid...\n");
+                        SaveReservation(userID, roomidReser, checkinDateSend, checkoutDateSend, bookingID, total);
+                        getch();
+                        printf("The room reservation was successful....\n");
+                        printf("---------------------------------------------");
+                        getch();
+                        return roomidReser;
+                    }
+                    else if (strcmp(confirm, "q") == 0)
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        printf("Invalid input. Please enter only 'c' or 'q'.\n");
+                    }
+                }
             }
             break;
         }
@@ -894,7 +888,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
 
     if (sscanf(checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        // การแปลงวันที่ไม่สำเร็จ
         printf("Invalid date format.\n");
         return -1;
     }
@@ -905,7 +898,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
 
     if (sscanf(checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
     {
-        // การแปลงวันที่ไม่สำเร็จ
         printf("Invalid date format.\n");
         return -1;
     }
@@ -930,7 +922,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
             {
                 if (sscanf(currentReservation->data.checkinDate, "%d/%d/%d", &day, &month, &year) != 3)
                 {
-                    // การแปลงวันที่ไม่สำเร็จ
                     printf("Invalid date format in reservation data.\n");
                     return -1;
                 }
@@ -941,7 +932,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
 
                 if (sscanf(currentReservation->data.checkoutDate, "%d/%d/%d", &day, &month, &year) != 3)
                 {
-                    // การแปลงวันที่ไม่สำเร็จ
                     printf("Invalid date format in reservation data.\n");
                     return -1;
                 }
@@ -952,7 +942,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
 
                 if (mktime(&checkin_tm) <= mktime(&checkout_res_tm) && mktime(&checkout_tm) >= mktime(&checkin_res_tm))
                 {
-                    // หากมีการจองในช่วงเวลานี้
                     isRoomBooked = 1;
                     break;
                 }
@@ -962,11 +951,9 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
 
         if (!isRoomBooked)
         {
-            // เพิ่ม RoomID ลงในอาร์เรย์
             availableRoomIDs[availableRoomCount] = atoi(currentRoom->data.roomID);
             availableRoomCount++;
 
-            // แสดงข้อมูลของห้องว่าง
             printf("Room %s ---------------------- \n", currentRoom->data.roomID);
             printf("Type : %s \n", currentRoom->data.roomType);
             printf("Bed: %s\n", currentRoom->data.bed);
@@ -974,7 +961,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
             printf("Guests : %s\n", currentRoom->data.Guests);
         }
 
-        // รีเซ็ตตัวชี้การจองกลับไปที่หัว
         currentReservation = ReservationHead;
         currentRoom = currentRoom->next;
     }
@@ -1013,7 +999,6 @@ int displayAvailableRooms(struct RoomNode *roomsHead, struct ReservationNode *Re
     }
 }
 
-// ฟังก์ชันแสดงรายการห้องที่ว่างและให้ผู้ใช้เลือก
 int RoomAvailable(struct RoomNode *roomsHead, struct ReservationNode *ReservationHead, int userid)
 {
     char checkinDate[50];
@@ -1066,7 +1051,7 @@ int RoomAvailable(struct RoomNode *roomsHead, struct ReservationNode *Reservatio
     return displayAvailableRooms(roomsHead, ReservationHead, checkinDate, checkoutDate, userid);
 }
 
-bool isAlpha(const char *str)
+bool isCharacters(const char *str)
 {
     int i;
     for (i = 0; str[i] != '\0'; i++)
@@ -1079,7 +1064,7 @@ bool isAlpha(const char *str)
     return true;
 }
 
-bool isAlphaNumeric(const char *str)
+bool isNumOrCha(const char *str)
 {
     int i;
     for (i = 0; str[i] != '\0'; i++)
@@ -1092,7 +1077,19 @@ bool isAlphaNumeric(const char *str)
     return true;
 }
 
-// ฟังก์ชั่นเขียนข้อมูลสมาชิกลงในไฟล์ CSV
+bool isNum(const char *str)
+{
+    int i;
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (!isdigit(str[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void registration(struct Node *memberHead)
 {
     char latestMemberID[50] = "0";
@@ -1112,18 +1109,17 @@ void registration(struct Node *memberHead)
     char firstName[50], lastName[50], username[50], password[50], tel[50];
     int age;
     system("cls");
-    printf("%d\n", newMemberID);
     printf("==============================\n");
     printf("|         Registration       |\n");
     printf("==============================\n\n");
 
-    printf("Enter first name: ");
     while (1)
     {
+        printf("Enter first name: ");
         scanf("%s", firstName);
-        if (!isAlpha(firstName))
+        if (!isCharacters(firstName))
         {
-            printf("Invalid input for first name. Please enter only alphabetic characters.\n");
+            printf("Invalid input for first name. Please enter only characters.\n");
         }
         else
         {
@@ -1131,13 +1127,13 @@ void registration(struct Node *memberHead)
         }
     }
 
-    printf("Enter last name: ");
     while (1)
     {
+        printf("Enter last name: ");
         scanf("%s", lastName);
-        if (!isAlpha(lastName))
+        if (!isCharacters(lastName))
         {
-            printf("Invalid input for last name. Please enter only alphabetic characters.\n");
+            printf("Invalid input for last name. Please enter only characters.\n");
         }
         else
         {
@@ -1145,13 +1141,13 @@ void registration(struct Node *memberHead)
         }
     }
 
-    printf("Enter username: ");
     while (1)
     {
+        printf("Enter username: ");
         scanf("%s", username);
-        if (!isAlphaNumeric(username))
+        if (!isCharacters(username))
         {
-            printf("Invalid input for username. Please enter only alphanumeric characters.\n");
+            printf("Invalid input for username. Please enter only characters.\n");
         }
         else
         {
@@ -1159,18 +1155,27 @@ void registration(struct Node *memberHead)
         }
     }
 
-    printf("Enter password: ");
-    scanf("%s", password);
-    // You can add more password validation here if needed.
-
-    printf("Enter Age: ");
     while (1)
     {
-        if (scanf("%d", &age) != 1)
+        printf("Enter password: ");
+        scanf("%s", password);
+        if (!isNumOrCha(password))
+        {
+            printf("Invalid input for password. Please enter only characters or number.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    while (1)
+    {
+        printf("Enter Age: ");
+        scanf("%d", &age);
+        if (age < 1 || age > 99)
         {
             printf("Invalid input for age. Please enter a valid number.\n");
-            while (getchar() != '\n')
-                ; // Clear the input buffer.
         }
         else
         {
@@ -1178,8 +1183,19 @@ void registration(struct Node *memberHead)
         }
     }
 
-    printf("Enter tel: ");
-    scanf("%s", tel);
+    while (1)
+    {
+        printf("Enter tel: ");
+        scanf("%s", tel);
+        if (!isNum(tel))
+        {
+            printf("Invalid input for tel. Please enter only number.\n");
+        }
+        else
+        {
+            break;
+        }
+    }
 
     FILE *file = fopen("member.csv", "a");
     if (file == NULL)
@@ -1235,7 +1251,7 @@ int main()
                                 strcat(userfullname, user->data.lastName);
 
                                 if (strcmp(user->data.role, "customer") == 0)
-                                { // Use double quotes for string comparison
+                                {
                                     int cuschoice;
                                     int userId = atoi(loggedInUser);
                                     cuschoice = displayCusMenu(userfullname);
@@ -1250,10 +1266,6 @@ int main()
                                     }
                                     else if (cuschoice == 3)
                                     {
-                                        // Edit account
-                                    }
-                                    else if (cuschoice == 4)
-                                    {
                                         loggedIn = 0;
                                         loggedInUser[0] = '\0';
                                         break;
@@ -1264,7 +1276,7 @@ int main()
                                     }
                                 }
                                 else if (strcmp(user->data.role, "employee") == 0)
-                                { // Use double quotes for string comparison
+                                {
                                     int Empchoice;
                                     Empchoice = displayEmpMenu(userfullname);
                                     if (Empchoice == 1)
@@ -1311,10 +1323,6 @@ int main()
             {
                 printf("Invalid choice. Please try again.\n");
             }
-        }
-        else
-        {
-            // Handle actions for a logged-in user
         }
     }
     return 0;
