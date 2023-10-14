@@ -795,6 +795,7 @@ void printLoadingAnimation(int seconds)
         Sleep(5000);
     }
     printf("Payment verification complete!\n");
+    getch();
 }
 
 int Booking(struct RoomNode *roomsHead, int UserRoomId, int userID, char *checkinDate, char *checkoutDate)
