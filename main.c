@@ -144,7 +144,7 @@ int displayMenu()
     {
         system("cls");
         printf("=====================================\n");
-        printf("|           Login System           |\n");
+        printf("|           Login System            |\n");
         printf("=====================================\n\n");
 
         printf("1. Login\n");
